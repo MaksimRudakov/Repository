@@ -1,0 +1,19 @@
+# Ресстр источник
+source_registry:
+  url: http://localhost:5001
+  # username: some_user
+  # password: some_password
+
+# Конечный реестр
+destination_registry:
+  url: http://localhost:5000
+
+# Репозитории для синхронизации
+repositories:
+  # - registry
+  - python
+
+# Префиксы, которые ищутся в тегах для дальнейшей синхронизации
+prefix:
+  - "p_"
+  - "d_"
