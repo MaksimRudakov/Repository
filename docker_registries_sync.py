@@ -8,6 +8,8 @@ import os
 import yaml
 import docker
 import sys
+import json
+import requests
 from docker_registry_client import DockerRegistryClient
 from requests import HTTPError
 
@@ -18,16 +20,18 @@ def get_tags(client, repositories, config):
             tags = client.repository(repository).tags()
         except HTTPError as e:
             if e.response.status_code == 404:
-                # sys.stdout.write("repository %s not found" % repository)
                 print("repository %s not found" % repository)
                 tags = []
             else:
                 raise e
-
-        for tag in tags:
-            for prefix in config['prefix']:
-                if prefix in tag:
-                    result.add(repository + ':' + tag)
+        if config['prefixes']:
+            for tag in tags:
+                for prefix in config['prefix']:
+                    if prefix in tag:
+                        result.add(repository + ':' + tag)
+        else: 
+            for tag in tags:
+                result.add(repository + ':' + tag)
 
     return result
 
@@ -61,7 +65,6 @@ def determine_password(config, kind):
     env_value = os.environ.get(env_var)
 
     if env_value is not None:
-        # sys.stdout.write("Using password from environment variable", env_var)
         print("Using password from environment variable", env_var)
         return env_value
 
@@ -98,14 +101,24 @@ if __name__ == '__main__':
     docker_client.login(registry=src_registry_url, username=src_username, password=src_password)
     docker_client.login(registry=dst_registry_url, username=dst_username,password=dst_password)
     
-    # Берем список контейнеров для синхронизации
-    repositories = config['repositories']
+    # Если включена синхронизация всех репозиториев
+    if config['take_all_repositories']:
+        # Получаем список репозиториев
+        # ----------------------------------
+        src_list_repo = requests.get(src_registry_url + "/v2/_catalog").json()
+        dst_list_repo = requests.get(dst_registry_url + "/v2/_catalog").json()
+        # ----------------------------------
+        
+        # Получаем теги по списку
+        src_tags = get_tags(src_client, src_list_repo['repositories'], config)
+        dst_tags = get_tags(dst_client, dst_list_repo['repositories'], config)
+    else:
+        # Берем список контейнеров для синхронизации
+        repositories = config['repositories']
+        # Вытаскиваем из реесторов теги, согласно списку из конфига
+        src_tags = get_tags(src_client, repositories, config)
+        dst_tags = get_tags(dst_client, repositories, config)
 
-    print("Все репы: "+str(src_client.repository()))
-
-    # Вытаскиваем из реесторов теги, согласно списку из конфига
-    src_tags = get_tags(src_client, repositories, config)
-    dst_tags = get_tags(dst_client, repositories, config)
 
     # Выясняем каких тегов нет в dst реестре
     missing_tags = src_tags - dst_tags
@@ -117,17 +130,14 @@ if __name__ == '__main__':
         dst_tag = strip_scheme(dst_registry_url) + '/' + missing_tag
 
         # Пулим контейнера из src реестра
-        # sys.stdout.write("Pulling:", src_tag)
         print("Pulling: "+ src_tag)
         docker_client.images.pull(src_tag)
 
         # Берем загруженный docker контейнер и меняем ему тег 
-        # sys.stdout.write("Changing %s to %s" % (src_tag, dst_tag,))
         print("Changing %s to %s" % (src_tag, dst_tag,))
         src_image = docker_client.images.get(name=src_tag)
         src_image.tag(dst_tag)
 
         # Пуш в dst реестр
-        # sys.stdout.write("Pushing:", dst_tag)
         print("Pushing: "+ dst_tag)
         docker_client.images.push(dst_tag)

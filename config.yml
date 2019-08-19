@@ -8,6 +8,13 @@ source_registry:
 destination_registry:
   url: http://localhost:5000
 
+# Взять все репозитории из реестра
+# Если False то нужно указать список в repositories
+take_all_repositories: True
+
+# Фильтр префиксов
+prefixes: False
+
 # Репозитории для синхронизации
 repositories:
   # - registry
