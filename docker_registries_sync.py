@@ -102,28 +102,36 @@ if __name__ == '__main__':
     docker_client.login(registry=src_registry_url, username=src_username, password=src_password)
     docker_client.login(registry=dst_registry_url, username=dst_username,password=dst_password)
 
-    if config['delete_tags']:
-        print('delete_tags')
+    # Если включена синхронизация всех репозиториев
+    if config['take_all_repositories']:
+        # Получаем список репозиториев
+        # ----------------------------------
+        src_list_repo = requests.get(src_registry_url + "/v2/_catalog").json()
+        dst_list_repo = requests.get(dst_registry_url + "/v2/_catalog").json()
+        # ----------------------------------
+        
+        # Получаем теги по списку
+        src_tags = get_tags(src_client, src_list_repo['repositories'], config)
+        dst_tags = get_tags(dst_client, dst_list_repo['repositories'], config)
     else:
-        # Если включена синхронизация всех репозиториев
-        if config['take_all_repositories']:
-            # Получаем список репозиториев
-            # ----------------------------------
-            src_list_repo = requests.get(src_registry_url + "/v2/_catalog").json()
-            dst_list_repo = requests.get(dst_registry_url + "/v2/_catalog").json()
-            # ----------------------------------
-            
-            # Получаем теги по списку
-            src_tags = get_tags(src_client, src_list_repo['repositories'], config)
-            dst_tags = get_tags(dst_client, dst_list_repo['repositories'], config)
-        else:
-            # Берем список контейнеров для синхронизации
-            repositories = config['repositories']
-            # Вытаскиваем из реесторов теги, согласно списку из конфига
-            src_tags = get_tags(src_client, repositories, config)
-            dst_tags = get_tags(dst_client, repositories, config)
+        # Берем список контейнеров для синхронизации
+        repositories = config['repositories']
+        # Вытаскиваем из реесторов теги, согласно списку из конфига
+        src_tags = get_tags(src_client, repositories, config)
+        dst_tags = get_tags(dst_client, repositories, config)
 
+    if config['delete_tags']:
+        print('______delete_tags______')
 
+        # Выясняем каких тегов нет в dst реестре
+        missing_tags = src_tags - dst_tags
+
+        # Выясняем какие теги были удалены в src реестре
+        missing_rm_tags = dst_tags - src_tags
+        print(missing_tags)
+        print(missing_rm_tags)
+
+    else:
         # Выясняем каких тегов нет в dst реестре
         missing_tags = src_tags - dst_tags
 

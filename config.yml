@@ -13,7 +13,7 @@ destination_registry:
 take_all_repositories: True
 
 # Фильтр префиксов
-prefixes: True
+prefixes: False
 
 # Репозитории для синхронизации
 repositories:
