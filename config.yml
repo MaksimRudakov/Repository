@@ -1,19 +1,19 @@
 # Ресстр источник
 source_registry:
-  url: http://localhost:5001
+  url: http://localhost:5000
   # username: some_user
   # password: some_password
 
 # Конечный реестр
 destination_registry:
-  url: http://localhost:5000
+  url: http://localhost:5001
 
 # Взять все репозитории из реестра
 # Если False то нужно указать список в repositories
 take_all_repositories: True
 
 # Фильтр префиксов
-prefixes: False
+prefixes: True
 
 # Репозитории для синхронизации
 repositories:
@@ -23,4 +23,10 @@ repositories:
 # Префиксы, которые ищутся в тегах для дальнейшей синхронизации
 prefix:
   - "p_"
-  - "d_"
+
+
+# Удаление тегов
+delete_tags: True
+
+# Удаление репозиториев
+delete_repositories: False
