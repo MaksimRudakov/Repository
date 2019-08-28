@@ -11,6 +11,7 @@ import sys
 import json
 import requests
 from docker_registry_client import DockerRegistryClient
+from docker_registry_client import Repository
 from requests import HTTPError
 
 def get_tags(client, repositories, config):
@@ -70,6 +71,13 @@ def determine_password(config, kind):
 
     return None
 
+def delete_tag(tag, client):
+    print('______Delete Tag______')
+
+    r = Repository(client)
+
+    return r
+
 # Проверка на основную программу
 if __name__ == '__main__':
 
@@ -128,8 +136,29 @@ if __name__ == '__main__':
 
         # Выясняем какие теги были удалены в src реестре
         missing_rm_tags = dst_tags - src_tags
+        print('Недостающие теги в dst: ')
         print(missing_tags)
+        print('Удаленные из src теги: ')
         print(missing_rm_tags)
+
+        for missing_rm_tag in missing_rm_tags:
+            print('')
+            print('Удаляю: ')
+            print('')
+            print(missing_rm_tag)
+
+            repo, sep, tag = missing_rm_tag.partition(':')
+            headers = {'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
+
+            print('')
+            print('Request: '+dst_registry_url+'/v2/'+repo+'/manifests/'+tag)
+            print('')
+
+            r = requests.get(dst_registry_url+'/v2/'+repo+'/manifests/'+tag, headers=headers)
+            r = requests.delete(dst_registry_url+'/v2/'+repo+'/manifests/'+r.headers['Docker-Content-Digest'], headers=headers)
+            print('')
+            print(r)
+            print('')
 
     else:
         # Выясняем каких тегов нет в dst реестре
