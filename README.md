@@ -17,7 +17,7 @@ docker run -d --restart=always --name images.boston.loc \
 ```
 
 
-# Команда для старта регистрации:
+# Команда для старта контейнера с скриптом синхронизации:
 ```
 docker run --rm \
     # Ссылка на docker на хосте
