@@ -1,6 +1,7 @@
 # docker_registries_sync
 
 # Команда для старта реестра:
+```
 docker run -d --restart=always --name images.boston.loc \
     #  Папка с сертификатами
     
@@ -17,9 +18,11 @@ docker run -d --restart=always --name images.boston.loc \
     -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
     -p 443:443 \
     registry:2
+```
 
 
 # Команда для старта регистрации:
+```
 docker run --rm \
     # Ссылка на docker на хосте
     
@@ -28,3 +31,4 @@ docker run --rm \
     
     -v $(pwd)/config.yml:/config.yml \
     sync
+```
