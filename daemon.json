@@ -1,0 +1,3 @@
+{
+    "insecure-registries" : [ "chicago.loc:5000" ]
+}

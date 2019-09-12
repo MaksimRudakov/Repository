@@ -71,16 +71,8 @@ def determine_password(config, kind):
 
     return None
 
-def delete_tag(tag, client):
-    print('______Delete Tag______')
-
-    r = Repository(client)
-
-    return r
-
 # Проверка на основную программу
 if __name__ == '__main__':
-
 
     # Загрузка конфига
     config = load_config()
@@ -102,6 +94,7 @@ if __name__ == '__main__':
     # Регистрация в реестрах 
     src_client = DockerRegistryClient(src_registry_url, username=src_username, password=src_password)
     dst_client = DockerRegistryClient(dst_registry_url, username=dst_username, password=dst_password)
+    
 
     # Создаем экземпляр клиента
     docker_client = docker.from_env()
@@ -127,9 +120,11 @@ if __name__ == '__main__':
         # Вытаскиваем из реесторов теги, согласно списку из конфига
         src_tags = get_tags(src_client, repositories, config)
         dst_tags = get_tags(dst_client, repositories, config)
+    
+    print(src_tags)
 
-    if config['delete_tags']:
-        print('______delete_tags______')
+    if config['delete_repositories']:
+        print('______delete_repositories______')
 
         # Выясняем каких тегов нет в dst реестре
         missing_tags = src_tags - dst_tags

@@ -1,12 +1,12 @@
 # Ресстр источник
 source_registry:
-  url: http://localhost:5000
+  url: https://images.boston.loc
   # username: some_user
   # password: some_password
 
 # Конечный реестр
 destination_registry:
-  url: http://localhost:5001
+  url: http://chicago.loc:5000
 
 # Взять все репозитории из реестра
 # Если False то нужно указать список в repositories
@@ -23,10 +23,6 @@ repositories:
 # Префиксы, которые ищутся в тегах для дальнейшей синхронизации
 prefix:
   - "p_"
-
-
-# Удаление тегов
-delete_tags: True
 
 # Удаление репозиториев
 delete_repositories: False
