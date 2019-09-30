@@ -114,6 +114,7 @@ if __name__ == '__main__':
         # Получаем теги по списку
         src_tags = get_tags(src_client, src_list_repo['repositories'], config)
         dst_tags = get_tags(dst_client, dst_list_repo['repositories'], config)
+        print(src_tags, dst_tags)
     else:
         # Берем список контейнеров для синхронизации
         repositories = config['repositories']
@@ -121,8 +122,6 @@ if __name__ == '__main__':
         src_tags = get_tags(src_client, repositories, config)
         dst_tags = get_tags(dst_client, repositories, config)
     
-    print(src_tags)
-
     if config['delete_repositories']:
         print('______delete_repositories______')
 

@@ -6,7 +6,7 @@ source_registry:
 
 # Конечный реестр
 destination_registry:
-  url: http://chicago.loc:5000
+  url: https://images.dallas.loc
 
 # Взять все репозитории из реестра
 # Если False то нужно указать список в repositories

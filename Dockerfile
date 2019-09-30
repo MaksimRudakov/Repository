@@ -1,18 +1,19 @@
-FROM ubuntu:latest
+FROM alpine:latest
 
-WORKDIR /
+RUN apk update
+RUN apk add py-pip
+RUN apk add ca-certificates
+RUN rm -rf /var/cache/apk/* 
+RUN pip install --no-cache-dir requests docker docker-registry-client pyyaml
 
-RUN apt-get update \
-    && apt-get install -y docker \
-    && apt-get install -y python-pip \
-    && pip install --no-cache-dir requests docker docker-registry-client pyyaml
-
-# Если нужно добавить незащищенный репозиторий
-# COPY daemon.json /etc/docker/
-# Можно копировать конфиг внутрь контейнера или передать при старте через --volumes (-v)
-# COPY config.yml /
-COPY docker_registries_sync.py /
+COPY certs/* /certs/
+COPY certs/ca.crt /usr/local/share/ca-certificates/ca.crt
 COPY start.sh /
-COPY certs/images.boston.loc/certs/* /certs/
+COPY docker_registries_sync.py /
 
-CMD /bin/sh /start.sh
+RUN update-ca-certificates
+
+ENV REQUESTS_CA_BUNDLE=/certs/ca.crt
+
+CMD sh start.sh
+

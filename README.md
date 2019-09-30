@@ -2,18 +2,12 @@
 
 # Команда для старта реестра:
 ```
-docker run -d --restart=always --name images.boston.loc \
-    #  Папка с сертификатами
-    -v /cephfs/DEV/sync_registries/certs/images.boston.loc/certs:/certs \
-    # Папка хранилище
-    -v /path/data:/var/lib/local \
-    # Говорит реестру работать на 443 порту
-    -e REGISTRY_HTTP_ADDR=0.0.0.0:443 \
-    # Указатели на сертификаты
-    -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
-    -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+docker run -d --restart=always --name images.dallas.loc \
+    # Папка хранилище, там же серты
+    -v /cephfs/docker-repo1:/var/lib/registry \
+    -e "TZ=Asia/Almaty" \
     -p 443:443 \
-    registry:2
+    registry.2
 ```
 
 
