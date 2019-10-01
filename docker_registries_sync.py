@@ -10,6 +10,7 @@ import docker
 import sys
 import json
 import requests
+import datetime
 from docker_registry_client import DockerRegistryClient
 from docker_registry_client import Repository
 from requests import HTTPError
@@ -21,7 +22,7 @@ def get_tags(client, repositories, config):
             tags = client.repository(repository).tags()
         except HTTPError as e:
             if e.response.status_code == 404:
-                print("repository %s not found" % repository)
+                # print(log("repository %s not found" % repository))
                 tags = []
             else:
                 raise e
@@ -66,13 +67,19 @@ def determine_password(config, kind):
     env_value = os.environ.get(env_var)
 
     if env_value is not None:
-        print("Using password from environment variable", env_var)
+        print(log("Using password from environment variable", env_var))
         return env_value
 
     return None
 
+def log(text):
+    now = datetime.datetime.now()
+    time = str(now.strftime("%d-%m-%y %H:%M - "))
+    return time+text
+
 # Проверка на основную программу
 if __name__ == '__main__':
+    print(log("Start synchronization"))
 
     # Загрузка конфига
     config = load_config()
@@ -95,7 +102,6 @@ if __name__ == '__main__':
     src_client = DockerRegistryClient(src_registry_url, username=src_username, password=src_password)
     dst_client = DockerRegistryClient(dst_registry_url, username=dst_username, password=dst_password)
     
-
     # Создаем экземпляр клиента
     docker_client = docker.from_env()
 
@@ -114,7 +120,6 @@ if __name__ == '__main__':
         # Получаем теги по списку
         src_tags = get_tags(src_client, src_list_repo['repositories'], config)
         dst_tags = get_tags(dst_client, dst_list_repo['repositories'], config)
-        print(src_tags, dst_tags)
     else:
         # Берем список контейнеров для синхронизации
         repositories = config['repositories']
@@ -122,37 +127,31 @@ if __name__ == '__main__':
         src_tags = get_tags(src_client, repositories, config)
         dst_tags = get_tags(dst_client, repositories, config)
     
+    print(log(time+"List src_tags: "+str(src_tags)))
+    print(log(time+"List dst_tags: "+str(dst_tags)))
+
     if config['delete_repositories']:
-        print('______delete_repositories______')
+        print('______Delete_repositories______')
 
         # Выясняем каких тегов нет в dst реестре
         missing_tags = src_tags - dst_tags
 
         # Выясняем какие теги были удалены в src реестре
         missing_rm_tags = dst_tags - src_tags
-        print('Недостающие теги в dst: ')
-        print(missing_tags)
-        print('Удаленные из src теги: ')
-        print(missing_rm_tags)
+        print(log('Missing tags in dst: '+str(missing_tags)))
+        print(log('Deleted tags in src: '+str(missing_rm_tags)))
 
         for missing_rm_tag in missing_rm_tags:
-            print('')
-            print('Удаляю: ')
-            print('')
-            print(missing_rm_tag)
+            print(log('Delete: '+str(missing_rm_tag)))
 
             repo, sep, tag = missing_rm_tag.partition(':')
             headers = {'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
 
-            print('')
-            print('Request: '+dst_registry_url+'/v2/'+repo+'/manifests/'+tag)
-            print('')
+            print(log('Request: '+dst_registry_url+'/v2/'+repo+'/manifests/'+tag))
 
             r = requests.get(dst_registry_url+'/v2/'+repo+'/manifests/'+tag, headers=headers)
             r = requests.delete(dst_registry_url+'/v2/'+repo+'/manifests/'+r.headers['Docker-Content-Digest'], headers=headers)
-            print('')
-            print(r)
-            print('')
+            print(log(r))
 
     else:
         # Выясняем каких тегов нет в dst реестре
@@ -165,14 +164,14 @@ if __name__ == '__main__':
             dst_tag = strip_scheme(dst_registry_url) + '/' + missing_tag
 
             # Пулим контейнера из src реестра
-            print("Pulling: "+ src_tag)
+            print(log("Pulling: "+ src_tag))
             docker_client.images.pull(src_tag)
 
             # Берем загруженный docker контейнер и меняем ему тег 
-            print("Changing %s to %s" % (src_tag, dst_tag,))
+            print(log("Changing %s to %s" % (src_tag, dst_tag,)))
             src_image = docker_client.images.get(name=src_tag)
             src_image.tag(dst_tag)
 
             # Пуш в dst реестр
-            print("Pushing: "+ dst_tag)
+            print(log("Pushing: "+ dst_tag))
             docker_client.images.push(dst_tag)
