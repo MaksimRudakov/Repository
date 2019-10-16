@@ -77,7 +77,6 @@ def log(text):
     time = str(now.strftime("%d-%m-%y %H:%M - "))
     return time+text
 
-# Проверка на основную программу
 if __name__ == '__main__':
     print(log("Start synchronization"))
 
